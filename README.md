@@ -144,7 +144,7 @@ curl -X POST http://localhost:5000/login \
   -d '{"usuario": "testuser", "contraseña": "1234"}'
 ```
 
-#### 3. Ver página de bienvenida:
+#### 3. Ver página de sistema:
 
 ```bash
 curl http://localhost:5000/tareas
