@@ -2,15 +2,201 @@ from flask import Flask, request, jsonify, render_template_string, session
 import sqlite3
 import bcrypt
 import os
-import bienvenida
 from datetime import datetime
 
 app = Flask(__name__)
 app.secret_key = 'clave_secreta'
-app.config['DATABASE'] = 'database/tareas.db'
+app.config['DATABASE'] = 'database/pfo2.db'
 
-# Importar el HTML de bienvenida desde el archivo templates/bienvenida.py
-BIENVENIDA_HTML = bienvenida.BIENVENIDA_HTML
+# HTML para la página de bienvenida
+BIENVENIDA_HTML = """
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Gestión de Tareas</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+
+    .container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    h1 {
+      color: #333;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .welcome-message {
+      background-color: #e8f5e8;
+      padding: 20px;
+      border-radius: 5px;
+      margin-bottom: 30px;
+      border-left: 4px solid #4CAF50;
+    }
+
+    .info-section {
+      margin-bottom: 20px;
+    }
+
+    .info-section h3 {
+      color: #555;
+      border-bottom: 2px solid #4CAF50;
+      padding-bottom: 5px;
+    }
+
+    .endpoints {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      margin: 10px 0;
+    }
+
+    .endpoint {
+      margin: 10px 0;
+      padding: 10px;
+      background-color: white;
+      border-radius: 3px;
+      border-left: 3px solid #007bff;
+    }
+
+    .method {
+      font-weight: bold;
+      color: #007bff;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🚀 Sistema de Gestión de Tareas</h1>
+
+    <div class="welcome-message">
+      <p>Esta API te permite registrar usuarios, iniciar sesión y gestionar tareas de manera segura.</p>
+    </div>
+
+    <div class="info-section">
+      <h3>📋 Endpoints Disponibles</h3>
+      <div class="endpoints">
+        <div class="endpoint">
+          <span class="method">GET</span> /
+          <br><small>Página de inicio</small>
+        </div>
+        <div class="endpoint">
+          <span class="method">GET</span> /status
+          <br><small>Endpoint para verificar el estado del servidor</small>
+        </div>
+        <div class="endpoint">
+          <span class="method">GET</span> /tareas
+          <br><small>Ver esta página</small>
+        </div>
+        <div class="endpoint">
+          <span class="method">POST</span> /registro
+          <br><small>Registrar un nuevo usuario</small>
+        </div>
+        <div class="endpoint">
+          <span class="method">POST</span> /login
+          <br><small>Iniciar sesión con credenciales</small>
+        </div>
+        <div class="endpoint">
+          <span class="method">POST</span> /logout
+          <br><small>Cerrar sesión</small>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-section">
+      <h3>🔐 Características de Seguridad</h3>
+      <ul>
+        <li>Contraseñas hasheadas con bcrypt</li>
+        <li>Autenticación por sesión</li>
+        <li>Base de datos SQLite persistente</li>
+        <li>Validación de datos de entrada</li>
+      </ul>
+    </div>
+
+    <div class="info-section">
+      <h3>📊 Estado del Sistema</h3>
+      <p><strong>Fecha y hora:</strong> {{ fecha_actual }}</p>
+      <p><strong>Usuarios registrados:</strong> {{ total_usuarios }}</p>
+      <p><strong>Estado:</strong> <span style="color: green;">✅ Operativo</span></p>
+    </div>
+
+    <div class="footer">
+      <p>PFO2 - Sistema de Gestión de Tareas | Desarrollado con Flask y SQLite</p>
+    </div>
+  </div>
+</body>
+
+</html>
+"""
+
+RUTA_RAIZ = """
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+        <meta charset="UTF-8">
+        <title>Bienvenido</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                background-color: #f4f4f4;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+                margin: 0;
+            }
+
+            h1 {
+                color: #333;
+            }
+
+            .btn {
+                margin-top: 20px;
+                padding: 10px 20px;
+                font-size: 16px;
+                color: #fff;
+                background-color: #007bff;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+                text-decoration: none;
+                transition: background-color 0.3s ease;
+            }
+
+            .btn:hover {
+                background-color: #0056b3;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>¡Bienvenido al Gestor de Tareas!</h1>
+        <a href="/tareas" class="btn">Ir a tareas</a>
+    </body>
+    </html>
+    """
 
 def init_db():
     """Inicializa la base de datos y crea las tablas necesarias"""
@@ -64,10 +250,7 @@ def verify_password(password, hashed):
 @app.route('/')
 def index():
     """Página de inicio que redirige a /tareas"""
-    return """
-    <h1>Sistema de Gestión de Tareas</h1>
-    <p><a href="/tareas">Ir a la página principal</a></p>
-    """
+    return RUTA_RAIZ
 
 @app.route('/registro', methods=['POST'])
 def registro():
@@ -110,6 +293,9 @@ def registro():
         conn = get_db_connection()
         cursor = conn.cursor()
         
+        # Hashear la contraseña
+        contraseña_hash = hash_password(contraseña)
+        
         # Verificar si el usuario ya existe
         cursor.execute('SELECT id FROM usuarios WHERE usuario = ?', (usuario,))
         if cursor.fetchone():
@@ -117,9 +303,6 @@ def registro():
             return jsonify({
                 'error': 'El usuario ya existe'
             }), 409
-        
-        # Hashear la contraseña
-        contraseña_hash = hash_password(contraseña)
         
         # Insertar el nuevo usuario
         cursor.execute('''
@@ -251,10 +434,10 @@ if __name__ == '__main__':
     init_db()
     print("🌐 Servidor iniciado en http://localhost:5000")
     print("📋 Endpoints disponibles:")
+    print("   - GET /tareas")
+    print("   - GET /status")
     print("   - POST /registro")
     print("   - POST /login")
-    print("   - GET /tareas")
     print("   - POST /logout")
-    print("   - GET /status")
     
     app.run(debug=True, host='0.0.0.0', port=5000)
