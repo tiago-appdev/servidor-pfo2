@@ -113,7 +113,7 @@ El servidor se iniciará en `http://localhost:5000`
 }
 ```
 
-### 3. Página de Bienvenida
+### 3. Página de Sistema
 
 - **URL:** `GET /tareas`
 - **Descripción:** Muestra una página HTML con información del sistema
