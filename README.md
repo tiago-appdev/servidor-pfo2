@@ -11,16 +11,18 @@ Sistema de gestión de tareas desarrollado con **Flask** y **SQLite** que implem
 - ✅ Base de datos SQLite persistente
 - ✅ Validación de datos de entrada básica
 - ✅ Página HTML de estilo simple para mostrar información del sistema
+- ✅ Cliente de consola para interactuar con la API
 
-## 📁 Estructura del Proyecto
+#### 📁 **Estructura del Proyecto**
 
-```
+```diff
 proyecto-pfo2/
 ├── servidor.py          # API Flask principal
+├── cliente.py           # Cliente de consola para consumir la API
 ├── requirements.txt     # Dependencias del proyecto
 ├── README.md            # Documentación
 └── database/            # Directorio para la base de datos SQLite
-    └── pfo2.db          # Base de datos SQLite
+    └── pfo2.db          # Base de datos SQLite (generada automáticamente)
 └── capturas/            # Directorio para capturas del sistema
     ├── login.png        # Captura de inicio de sesión exitoso
     ├── bienvenida.png   # Captura de página de bienvenida
@@ -64,6 +66,32 @@ python servidor.py
 ```
 
 El servidor se iniciará en `http://localhost:5000`
+
+---
+
+## 🖥️ Uso del Cliente de Consola
+
+> El archivo `cliente.py` permite consumir los endpoints del servidor desde una interfaz por consola. Podés registrar usuarios, iniciar sesión y visualizar la página del sistema.
+
+### ▶️ Ejecutar
+
+```bash
+python cliente.py
+```
+
+### 📋 Menú de opciones disponibles
+
+```
+--- Cliente de Consola: Gestor de Tareas ---
+1. Registrar usuario
+2. Iniciar sesión
+3. Ver sistema (/tareas)
+4. Salir
+```
+
+El cliente utiliza la librería `requests` para enviar y recibir datos de la API. Es ideal para probar de forma práctica los endpoints definidos en `servidor.py`.
+
+---
 
 ## 📡 Endpoints de la API
 
